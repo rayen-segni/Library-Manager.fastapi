@@ -20,7 +20,7 @@ class UserBase(BaseModel):
   role: Literal["admin", "user"] = "user"
   full_name: str
   email: EmailStr
-  phone: str
+  phone: constr(max_length=8, min_length=8)
   age: conint(gt=12)
 
 class UserCreate(UserBase):
@@ -52,6 +52,8 @@ class BookUpdate(BaseModel):
 class BookResponse(BookBase):
   added_at: datetime
 
+class BookBack(BaseModel):
+  cin: constr(max_length=8, min_length=8)
 
 #Loan
 

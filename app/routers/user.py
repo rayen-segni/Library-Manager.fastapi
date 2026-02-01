@@ -15,34 +15,22 @@ router = APIRouter(
 @router.get('/',
           response_model=schemas.List[schemas.UserResponse])
 def get_all_users(db: Session = Depends(get_db),
-                  current_user: schemas.TokenData = Depends(oauth2.get_current_user)):
+                  current_user: schemas.TokenData = Depends(oauth2.get_current_user),
+                  search: str = ""):
   
   if current_user.role != "admin":
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                         detail="Admin privileges required")
   
-  users = db.query(models.User).all()
+  users = (db.query(models.User)
+          .filter(models.User.full_name.contains(search.lower()))
+          .all())
   
   if users is None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="No Users Found")
 
   return users
-
-#Get User
-@router.get('/{id}',
-          response_model=schemas.UserResponse)
-def get_user(id: int,
-            db: Session = Depends(get_db),
-            current_user: schemas.TokenData = Depends(oauth2.get_current_user)):
-  
-  user = db.query(models.User).filter(models.User.id == id).first()
-  
-  if user is None:
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                        detail="User Not Found")
-  
-  return user
 
 
 
@@ -58,7 +46,10 @@ def add_user(user: schemas.UserCreate,
   hashed_password = utils.hash(user.password)
   user.password = hashed_password
   
-  new_user = models.User(**user.dict())
+  user_dict = user.dict()
+  user_dict["full_name"] = user_dict["full_name"].lower()
+  
+  new_user = models.User(**user_dict)
   
   try:
     db.add(new_user)
@@ -104,9 +95,10 @@ def update_user(id: int,
     
   user_dict = user.dict()
   user_dict["password"] = utils.hash(user_dict["password"])
+  user_dict["full_name"] = user_dict["full_name"].lower()
   
   user_query.update(user_dict, synchronize_session=False)
   db.commit()
-  
+
   return user_query.first()
 

@@ -119,13 +119,14 @@ def get_book_user(id: int,
 
 @router.post('/{title}')
 def book_back(title: str,
+              back: schemas.BookBack,
               db: Session = Depends(get_db),
               current_user: schemas.TokenData = Depends(get_current_user)):
   
   #Authorization
-  if current_user.role != "user":
+  if current_user.role != "admin":
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                        detail="User privileges required")
+                        detail="Admin privileges required")
   #verify on book name
   book = db.query(models.Book).filter(models.Book.title == title.lower()).first()
   
@@ -133,8 +134,18 @@ def book_back(title: str,
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="Book Not Found")
   
+  #verify client
+  client_id = db.query(models.User.id).filter(models.User.cin == back.cin).first()
+
+  
+  if client_id is None:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Client Not Found")
+    
   #Verify on loan 
-  loan = db.query(models.Loan).filter(and_(models.Loan.book_id == book.id, models.Loan.retrieved == False)).first()
+  loan = (db.query(models.Loan)
+          .filter(and_(models.Loan.book_id == book.id, models.Loan.retrieved == False, models.Loan.id == client_id[0]))
+          .first())
   
   if loan is None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -151,7 +162,7 @@ def book_back(title: str,
   #parse accept string and any format of date it always change it to => yyyy-mm-dd
   
   if default < now:
-    return {"message": f"You made a delay of {(now - default).days} days"}
+    return {"message": f"You made a late of {(now - default).days} days"}
 
   return {"message": "Book Back With success"}
 

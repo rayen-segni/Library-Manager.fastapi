@@ -69,13 +69,8 @@ def delete_book(title: str,
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="Book Not Found")
   
-  if exist.first() is not None:
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Book is loaned")
-  
+  #verify that the book not loaned
   exist = db.query(models.Loan).filter(and_(models.Loan.book_id == book.first().id, models.Loan.retrieved == False)).first
-  
-  print(exist.first())
   
   if exist is not None:
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
