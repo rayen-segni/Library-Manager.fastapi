@@ -94,7 +94,7 @@ def add_book_loan(loan: schemas.LoanCreate,
     #add end_date key
     loan_dict.update({"end_date": end_date})
     
-    new_loan = models.Loan(client_id=current_user.id, **loan_dict)
+    new_loan = models.Loan(client_id=current_user.id, **loan_dict, retrieved=False)
     
     db.add(new_loan)
     
@@ -114,16 +114,16 @@ def get_user_loans(id: int,
   
   user = db.query(models.Loan).filter(models.Loan.client_id == id).all()
   
-  if user is None:
+  if user == []:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                        detail="User Not Found")
+                        detail="No loans for this user")
   
   return user
 
 
 @router.post('/{title}')
 def book_back(title: str,
-              back: schemas.BookBack,
+              cin: schemas.BookBack,
               db: Session = Depends(get_db),
               current_user: schemas.TokenData = Depends(get_current_user)):
   
@@ -139,7 +139,7 @@ def book_back(title: str,
                         detail="Book Not Found")
   
   #verify client
-  client_id = db.query(models.User.id).filter(models.User.cin == back.cin).first()
+  client_id = db.query(models.User.id).filter(models.User.cin == cin.cin).first()
 
   
   if client_id is None:
@@ -148,7 +148,7 @@ def book_back(title: str,
     
   #Verify on loan 
   loan = (db.query(models.Loan)
-          .filter(and_(models.Loan.book_id == book.id, models.Loan.retrieved == False, models.Loan.id == client_id[0]))
+          .filter(and_(models.Loan.book_id == book.id, models.Loan.retrieved == False, models.Loan.client_id == client_id[0]))
           .first())
   
   if loan is None:
