@@ -30,8 +30,8 @@ class UserUpdate(UserBase):
   pass
 
 class UserResponse(UserBase):
-  created_at: date
-  id: int 
+  created_at: datetime
+  id: int
   
   model_config = ConfigDict(from_attributes=True)
 

@@ -26,7 +26,7 @@ def get_all_users(db: Session = Depends(get_db),
           .filter(models.User.full_name.contains(search.lower()))
           .all())
   
-  if users is None:
+  if users == []:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="No Users Found")
 
