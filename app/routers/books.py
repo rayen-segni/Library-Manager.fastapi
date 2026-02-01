@@ -66,20 +66,22 @@ def delete_book(title: str,
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                         detail="Admin privilges required")
   
-  book = db.query(models.Book).filter(models.Book.title == title)
+  book_query = db.query(models.Book).filter(models.Book.title == title)
   
-  if book.first() is None:
+  book = book_query.first()
+  
+  if book is None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="Book Not Found")
   
   #verify that the book not loaned
-  exist = db.query(models.Loan).filter(and_(models.Loan.book_id == book.first().id, models.Loan.retrieved == False)).first
+  exist = db.query(models.Loan).filter(and_(models.Loan.book_id == book.id, models.Loan.retrieved == False)).first()
   
   if exist is not None:
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Book is loaned")
   
-  book.delete(synchronize_session=False)
+  book_query.delete(synchronize_session=False)
   db.commit()
   
   return status.HTTP_204_NO_CONTENT
