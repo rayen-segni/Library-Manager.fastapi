@@ -8,7 +8,7 @@ from sqlalchemy import and_, func
 from ..databse import get_db
 from ..oauth2 import get_current_user
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import parser
 
 
@@ -16,7 +16,7 @@ router = APIRouter(
   prefix='/loans',
   tags=['Loans Mangement']
 )
-
+#Add loan
 @router.post('/',
             response_model=schemas.LoanResponse, 
             status_code=status.HTTP_201_CREATED)
@@ -74,10 +74,7 @@ def add_book_loan(loan: schemas.LoanCreate,
 
   #verify on loan intervale
     
-    now = datetime.now()
-    end_date = loan.dict()["end_date"]
-    
-    days = (end_date - now).days
+    days = loan.dict()["days"] 
     
     if days < 1:
       raise HTTPException(
@@ -90,7 +87,14 @@ def add_book_loan(loan: schemas.LoanCreate,
           detail="Duration cannot exceed 60 days"
       )
 
-    new_loan = models.Loan(client_id=current_user.id, **loan.dict())
+    end_date = datetime.now() + timedelta(days=days)
+    
+    #filter the key days
+    loan_dict = {key: value for key, value in  loan.dict().items() if key != "days"}
+    #add end_date key
+    loan_dict.update({"end_date": end_date})
+    
+    new_loan = models.Loan(client_id=current_user.id, **loan_dict)
     
     db.add(new_loan)
     
@@ -99,13 +103,13 @@ def add_book_loan(loan: schemas.LoanCreate,
     
     db.commit()
     db.refresh(new_loan)
-  #return
+
     return new_loan
 
-
+#get user loans
 @router.get('/{id}',
             response_model=schemas.List[schemas.LoanResponse])
-def get_book_user(id: int,
+def get_user_loans(id: int,
                   db: Session = Depends(get_db)):
   
   user = db.query(models.Loan).filter(models.Loan.client_id == id).all()
@@ -166,7 +170,7 @@ def book_back(title: str,
 
   return {"message": "Book Back With success"}
 
-
+#Show current loans
 @router.get('/',
             response_model=schemas.List[schemas.LoanResponse])
 def current_loans(db: Session = Depends(get_db),

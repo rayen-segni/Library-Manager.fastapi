@@ -39,10 +39,8 @@ def get_all_users(db: Session = Depends(get_db),
             response_model=schemas.UserResponse,
             status_code=status.HTTP_201_CREATED)
 def add_user(user: schemas.UserCreate,
-            db: Session = Depends(get_db),
-            current_user: schemas.TokenData = Depends(oauth2.get_current_user)):
+            db: Session = Depends(get_db)):
   
-
   hashed_password = utils.hash(user.password)
   user.password = hashed_password
   
@@ -68,6 +66,10 @@ def delete_user(id: int,
                 db: Session = Depends(get_db),
                 current_user: schemas.TokenData = Depends(oauth2.get_current_user)):
 
+  if current_user.role != "admin":
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Admin privileges required")
+
   user = db.query(models.User).filter(models.User.id == id)
   
   if user.first() is None:
@@ -86,6 +88,10 @@ def update_user(id: int,
                 user: schemas.UserCreate,
                 db: Session = Depends(get_db),
                 current_user: schemas.TokenData = Depends(oauth2.get_current_user)):
+  
+  if current_user.role != "admin":
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Admin privileges required")
   
   user_query = db.query(models.User).filter(models.User.id == id)
   

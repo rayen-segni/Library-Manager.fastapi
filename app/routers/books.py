@@ -10,6 +10,7 @@ router = APIRouter(
   tags=["Library Management"]
 )
 
+#show books
 @router.get('/')
 def show_books(db: Session = Depends(get_db),
               response_model=schemas.List[schemas.BookResponse],
@@ -27,6 +28,7 @@ def show_books(db: Session = Depends(get_db),
   
   return books
 
+#Add book
 @router.post('/',
             response_model=schemas.BookResponse,
             status_code=status.HTTP_201_CREATED)
@@ -53,6 +55,7 @@ def add_book(book: schemas.BookCreate,
   
   return new_book
 
+#Delete book
 @router.delete('/{title}',
               status_code=status.HTTP_204_NO_CONTENT)
 def delete_book(title: str,
@@ -81,7 +84,7 @@ def delete_book(title: str,
   
   return status.HTTP_204_NO_CONTENT
 
-
+#Update book copies
 @router.put('/',
             response_model=schemas.BookResponse)
 def update_book_copies(book: schemas.BookUpdate,

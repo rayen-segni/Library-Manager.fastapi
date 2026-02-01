@@ -1,6 +1,6 @@
 from pydantic import BaseModel, conint, constr, EmailStr, ConfigDict
 from typing import Optional, Literal, List
-from datetime import datetime
+from datetime import datetime, date
 
 #Token
 
@@ -30,7 +30,8 @@ class UserUpdate(UserBase):
   pass
 
 class UserResponse(UserBase):
-  created_at: datetime
+  created_at: date
+  id: int 
   
   model_config = ConfigDict(from_attributes=True)
 
@@ -59,7 +60,7 @@ class BookBack(BaseModel):
 
 class LoanBase(BaseModel):
   book_id: int
-  end_date: datetime
+  days: int
   retrieved: bool = False
 
 class LoanCreate(LoanBase):
