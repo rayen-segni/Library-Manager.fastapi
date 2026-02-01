@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from .routers import auth, user, loan, books
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
 
 origins = ["*"]
 
@@ -11,8 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-app = FastAPI()
 
 app.include_router(auth.router)
 app.include_router(user.router)
