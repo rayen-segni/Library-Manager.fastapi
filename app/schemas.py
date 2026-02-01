@@ -61,13 +61,15 @@ class BookBack(BaseModel):
 class LoanBase(BaseModel):
   book_id: int
   days: int
-  retrieved: bool = False
+
 
 class LoanCreate(LoanBase):
   pass
 
-class LoanResponse(LoanBase):
+class LoanResponse(BaseModel):
   start_date: datetime
+  end_date: datetime
+  retrieved: bool = False
   
   client: UserResponse
   book: BookResponse

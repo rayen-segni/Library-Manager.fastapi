@@ -180,9 +180,9 @@ def current_loans(db: Session = Depends(get_db),
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                         detail="Admin privileges required")
   
-  current_loans = db.query(models.Loan).filter(models.Loan.retrieved == False)
+  current_loans = db.query(models.Loan).filter(models.Loan.retrieved == False).all()
   
-  if current_loans is None:
+  if current_loans == []:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="No loans found now")
   
